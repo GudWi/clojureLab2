@@ -1,31 +1,29 @@
 (ns main)
 
-(def seq1 (lazy-seq (iterate inc 1)))
+(defn is-small-seq? [R i seq]
+      (if (< i R) (take (- (+ 1 (* 2 R)) (- R i)) (drop (- i R) seq)) (take (+ 1 (* 2 R)) (drop (- i R) seq))))
 
-(defn dispersion [window-size, seq]
-  (loop [i 0]
-    (if (< i 5)
-      (do
-        (println "i =" i)
-        (let [ar (take window-size (drop (* window-size i) seq)),
-              sum (loop [j 0, n 0]
-                    (if (< j window-size)
-                      (do (recur (inc j) (+ n (first (take 1 (drop j ar))))))
-                      n)),
-              sum-of-deviations (loop [j 0, n 0]
-                                  (if (< j window-size)
-                                    (do (recur (inc j) (+ n (* (- (first (take 1 (drop j ar))) (/ sum window-size))
-                                                               (- (first (take 1 (drop j ar))) (/ sum window-size))))))
-                                    n))]
-          (println ar)
-          (println "sum =" sum)
-          (println "sum-of-deviations =" sum-of-deviations)
-          (println "дисперсия =" (/ sum-of-deviations window-size))
-          )
-        (recur (inc i))
-        )
-      )
-    )
-)
+  (def my-function (fn [x, y]
+                     (* (- x y) (- x y))))
 
-(dispersion 3 seq1)
+(defn dispersion
+      ([seq R]
+       (dispersion seq R 0))
+      ([seq R i]
+       (lazy-seq(cons (let [window (is-small-seq? R i seq),
+                            sum (reduce + window),
+                            median (/ sum (count window)),
+                            sum-of-deviations (reduce + (map my-function window (take (count window) (range median (+ median 1) 0)))),
+                            disp (/ sum-of-deviations (count window))]
+                           disp)
+                      (dispersion seq R (+ i 1))))))
+
+(defn fib-seq
+      ([]
+       (fib-seq 0 1))
+      ([a b]
+       (lazy-seq
+         (cons b (fib-seq b (+ a b))))))
+
+(println(take 5 (fib-seq)))
+(println (take 7(dispersion [1 2 3 4 5 6 7] 2)))
