@@ -7,8 +7,8 @@
         (take (- length-of-window (- R i)) seq)
         (take length-of-window seq))))
 
-  (def calculate-deviation (fn [x, y]
-                     (* (- x y) (- x y))))
+(def calculate-deviation (fn [x, y]
+                           (* (- x y) (- x y))))
 
 (defn dispersion
       ([seq R]
@@ -17,9 +17,12 @@
        (lazy-seq(cons (let [window (is-small-seq R i seq),
                             sum (reduce + window),
                             median (/ sum (count window)),
-                            sum-of-deviations (reduce + (map calculate-deviation window (take (count window) (range median (+ median 1) 0)))),
+                            call-calculate-deviation #(calculate-deviation % median),
+                            sum-of-deviations (reduce + (map call-calculate-deviation window)),
                             disp (/ sum-of-deviations (count window))]
                            disp)
                       (dispersion (if (< i R) seq (next seq)) R (+ i 1))))))
+
+
 
 (println (take 7(dispersion [1 2 3 4 5 6 7] 2)))
