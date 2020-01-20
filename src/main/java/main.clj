@@ -30,11 +30,12 @@
 (fun in out)
 
 (defn printer [channel channelName]
-  (Thread/sleep 100)
+  (Thread/sleep 1000)
   (println "Class: " channelName)
   (a/go-loop []
     (when-some [value (a/<! channel)]
       (println "Val " value)
       (recur))))
 
+(printer in "in")
 (printer out "out")
