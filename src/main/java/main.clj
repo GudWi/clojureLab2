@@ -1,28 +1,40 @@
-(ns main)
+(ns main
+  (:require [clojure.core.async :as a]))
 
-(defn is-small-seq [R i seq]
-  (let [D (* 2 R),
-        length-of-window (+ 1 D)]
-      (if (< i R)
-        (take (- length-of-window (- R i)) seq)
-        (take length-of-window seq))))
+(def in (a/chan 10))
+(def out (a/chan 10))
+(def accumulated (set ()))
 
-(def calculate-deviation (fn [x, y]
-                           (* (- x y) (- x y))))
+(defn fill-in-chan [] (take 10 [1 "func" 16 9 3 3 :reset "clojure" 5 3]))
+(a/onto-chan in (fill-in-chan))
 
-(defn dispersion
-      ([seq R]
-       (dispersion seq R 0))
-      ([seq R i]
-       (lazy-seq(cons (let [window (is-small-seq R i seq),
-                            sum (reduce + window),
-                            median (/ sum (count window)),
-                            call-calculate-deviation #(calculate-deviation % median),
-                            sum-of-deviations (reduce + (map call-calculate-deviation window)),
-                            disp (/ sum-of-deviations (count window))]
-                           disp)
-                      (dispersion (if (< i R) seq (next seq)) R (+ i 1))))))
+(defn fun [in out]
+  (a/go-loop []
+             (when-some [value (a/<! in)]
+               (println "value" value)
+               (when (not= value :reset)
+                 (println accumulated)
+                 (when (contains? accumulated value)
+                   (println "founded in accumulated values"))
+                 (when (not (contains? accumulated value))
+                   (println "not found in accumulated values")
+                   (def accumulated (conj accumulated value))
+                   (a/>! out value))
+                 )
+               (when (= value :reset)
+                 (println "reset")
+                 (def accumulated (set nil))
+                 )
+               (recur))))
 
+(fun in out)
 
+(defn printer [channel channelName]
+  (Thread/sleep 100)
+  (println "Class: " channelName)
+  (a/go-loop []
+    (when-some [value (a/<! channel)]
+      (println "Val " value)
+      (recur))))
 
-(println (take 7(dispersion [1 2 3 4 5 6 7] 2)))
+(printer out "out")

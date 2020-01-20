@@ -14,5 +14,11 @@
             <artifactId>clojure</artifactId>
             <version>1.10.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.clojure/core.async -->
+        <dependency>
+            <groupId>org.clojure</groupId>
+            <artifactId>core.async</artifactId>
+            <version>0.7.559</version>
+        </dependency>
     </dependencies>
 </project>
